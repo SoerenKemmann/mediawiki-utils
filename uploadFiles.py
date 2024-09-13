@@ -17,6 +17,8 @@ def main(argv):
    extension = ''
    lgname = ''
    lgpassword = ''
+   category = ''
+   pagename = ''
    try:
       opts, args = getopt.getopt(argv,"hvu:b:e:l:p:",["url=","basedir=","ext=", "login=","password="])
    except getopt.GetoptError:

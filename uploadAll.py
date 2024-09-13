@@ -1,11 +1,12 @@
 """
-    upload content to (create pages in) mediawiki
+    upload files to mediawiki
     Author: Sören Kemmann
 """
 
 import requests
 import json
 import os
+import re
 from pathlib import Path
 import sys, getopt
 
@@ -14,20 +15,21 @@ def main(argv):
    outputfile = ''
    actionUrl = ''
    baseDir = ''
-   extension = ''
+   extPage = ''
+   extImage = ''
    lgname = ''
    lgpassword = ''
    category = ''
    pagename = ''
    try:
-      opts, args = getopt.getopt(argv,"hvu:b:e:a:c:l:p:",["url=","basedir=","ext=","application=","category=", "login=","password="])
+      opts, args = getopt.getopt(argv,"hvu:b:e:i:a:c:l:p:",["url=","basedir=","extPage=","extImage=","application=","category=", "login=","password="])
    except getopt.GetoptError:
-      print ('upload.py -v -u <url> -b <basedir> -e <ext> -a <application> -c <category> -l <login> -p <password>')
+      print ('upload.py -v -u <url> -b <basedir> -e <extPage> -i <extImage> -a <application> -c <category> -l <login> -p <password>')
       sys.exit(2)
    verbose = False
    for opt, arg in opts:
       if opt == '-h':
-         print ('upload.py -v -u <url> -b <basedir> -e <ext> -a <application> -c <category> -l <login> -p <password>')
+         print ('upload.py -v -u <url> -b <basedir> -e <extPage> -i <extImage> -a <application> -c <category> -l <login> -p <password>')
          sys.exit()
       elif opt in ("-v", "--verbose"):
          verbose  = True
@@ -35,8 +37,10 @@ def main(argv):
          actionUrl  = arg
       elif opt in ("-b", "--basedir"):
          baseDir  = arg
-      elif opt in ("-e", "--ext"):
-         extension  = arg
+      elif opt in ("-e", "--extPage"):
+         extPage  = re.split("\:",arg)
+      elif opt in ("-i", "--extImage"):
+         extImage  = re.split("\:",arg)
       elif opt in ("-a", "--application"):
          pagename  = arg
       elif opt in ("-c", "--category"):
@@ -48,7 +52,8 @@ def main(argv):
    if verbose:
       print ("URL: ", actionUrl)
       print ("BaseDir: ", baseDir)
-      print ("Extension: ", extension)
+      print ("Extension Page: ", extPage)
+      print ("Extension Image: ", extImage)
       print ("PageName: ", pagename)
       print ("Category: ", category)
       print ("Login: ", lgname)
@@ -110,18 +115,43 @@ def main(argv):
    directory = os.fsencode(baseDir)
    for root,d_names,f_names in os.walk(directory):
       for f in f_names:
-          filename = os.fsdecode(f)
-          if filename.endswith(extension): 
-              titel = ''
+          filename, file_extension = os.path.splitext(os.fsdecode(f))
+          titel = ''
+          if file_extension in extImage or file_extension in extPage:
               if category:
                   titel = category + ":"
               titel = titel + pagename
               if Path(filename).stem != "main":
                   titel = titel + "/" + os.fsdecode(os.path.relpath(os.path.join(root, os.fsencode(Path(filename).stem)), directory))
+              hashStr = str( int(hashlib.sha1(titel.encode("utf-8")).hexdigest(), 16) % (10 ** 8))
+              hashStr = 'UID' + ha
+              if verbose: 
+                 print ("PageTitel: " + titel)
+                 print ("ImageHash: " + hashStr)
+          if file_extension in extImage: 
               if verbose: 
                  print (titel)
+              hashedFile = hashStr + os.fsdecode(f)
+              postFileParams = {
+                  "action": "upload",
+                  "filename": hashedFile,
+                  "format": "json",
+                  "token": CSRF_TOKEN,
+                  "ignorewarnings": 1
+              }
+              FILE = {'file':(filename, open(os.path.join(root, f), 'rb'), 'multipart/form-data')}
+              response = session.post(url=actionUrl, files=FILE, data=postFileParams)
+              jsonData = response.json()
+              if verbose:
+                 print(jsonData)
+              continue
+          if file_extension in extPage:
+              
               with open(os.path.join(root, f), 'r') as contentfile:
                   pageText = contentfile.read()
+                  reEx = r'(\[\[File:)'
+                  if re.search(reEx, pageText):
+                     pageText = re.sub(reEx, r"\1" + re.escape(hashStr), pageText)
               pageParams = {
                   "action": "edit",
                   "title": titel,
