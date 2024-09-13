@@ -144,8 +144,8 @@ def main(argv):
               FILE = {'file':(filename, open(os.path.join(root, f), 'rb'), 'multipart/form-data')}
               response = session.post(url=actionUrl, files=FILE, data=postFileParams)
               jsonData = response.json()
-              #if verbose:
-              #   print(jsonData)
+              if verbose:
+                 print(jsonData)
               continue
           if file_extension in extPage:
               
@@ -163,8 +163,8 @@ def main(argv):
               }
               response = session.post(url=actionUrl, data=pageParams)
               jsonData = response.json()
-              #if verbose:
-              #   print(jsonData)
+              if verbose:
+                 print(jsonData)
               continue
 
 if __name__ == "__main__":
