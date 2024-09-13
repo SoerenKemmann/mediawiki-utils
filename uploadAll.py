@@ -121,10 +121,11 @@ def main(argv):
               if category:
                   titel = category + ":"
               titel = titel + pagename
+              hashStr = titel
               if Path(filename).stem != "main":
                   titel = titel + "/" + os.fsdecode(os.path.relpath(os.path.join(root, os.fsencode(Path(filename).stem)), directory))
-              hashStr = str( int(hashlib.sha1(titel.encode("utf-8")).hexdigest(), 16) % (10 ** 8))
-              hashStr = 'UID' + ha
+                  hashStr = hashStr + "/" + os.fsdecode(os.path.relpath(root, directory))
+              hashStr = 'UID' + str( int(hashlib.sha1(hashStr.encode("utf-8")).hexdigest(), 16) % (10 ** 8))
               if verbose: 
                  print ("PageTitel: " + titel)
                  print ("ImageHash: " + hashStr)
@@ -142,8 +143,8 @@ def main(argv):
               FILE = {'file':(filename, open(os.path.join(root, f), 'rb'), 'multipart/form-data')}
               response = session.post(url=actionUrl, files=FILE, data=postFileParams)
               jsonData = response.json()
-              if verbose:
-                 print(jsonData)
+              #if verbose:
+              #   print(jsonData)
               continue
           if file_extension in extPage:
               
@@ -151,7 +152,7 @@ def main(argv):
                   pageText = contentfile.read()
                   reEx = r'(\[\[File:)'
                   if re.search(reEx, pageText):
-                     pageText = re.sub(reEx, r"\1" + re.escape(hashStr), pageText)
+                     pageText = re.sub(reEx, r"\[\[Datei:" + re.escape(hashStr), pageText)
               pageParams = {
                   "action": "edit",
                   "title": titel,
@@ -161,8 +162,8 @@ def main(argv):
               }
               response = session.post(url=actionUrl, data=pageParams)
               jsonData = response.json()
-              if verbose:
-                 print(jsonData)
+              #if verbose:
+              #   print(jsonData)
               continue
 
 if __name__ == "__main__":
