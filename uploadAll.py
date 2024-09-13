@@ -153,7 +153,7 @@ def main(argv):
                   pageText = contentfile.read()
                   reEx = r'(\[\[File:)'
                   if re.search(reEx, pageText):
-                     pageText = re.sub(reEx, r"\[\[Datei:" + re.escape(hashStr), pageText)
+                     pageText = re.sub(reEx, r"[[Datei:" + re.escape(hashStr), pageText)
               pageParams = {
                   "action": "edit",
                   "title": titel,
