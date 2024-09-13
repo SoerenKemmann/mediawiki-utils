@@ -125,7 +125,7 @@ def main(argv):
               hashStr = titel
               if Path(filename).stem != "main":
                   titel = titel + "/" + os.fsdecode(os.path.relpath(os.path.join(root, os.fsencode(Path(filename).stem)), directory))
-                  hashStr = hashStr + "/" + os.fsdecode(os.path.relpath(root, directory))
+              hashStr = hashStr + "/" + os.fsdecode(os.path.relpath(root, directory))
               hashStr = 'UID' + str( int(hashlib.sha1(hashStr.encode("utf-8")).hexdigest(), 16) % (10 ** 8))
               if verbose: 
                  print ("PageTitel: " + titel)
